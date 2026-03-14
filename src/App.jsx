@@ -143,7 +143,7 @@ function HexagramLine({yang,changing,revealed,animDelay}){
 
 function Collapsible({title,children}){
   const[open,setOpen]=useState(false);
-  return(<div style={{border:`1px solid ${open?GREEN+"40":"#1a1a1a"}`,borderRadius:2,marginBottom:16,background:open?"rgba(0,255,51,0.015)":"rgba(0,255,51,0.005)",transition:"all 0.3s"}}><button onClick={()=>setOpen(!open)} style={{width:"100%",padding:"14px 16px",background:"transparent",border:"none",color:GREEN,fontFamily:"monospace",fontSize:11,letterSpacing:3,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",textAlign:"left"}}><span>{title}</span><span style={{transform:open?"rotate(180deg)":"rotate(0)",transition:"transform 0.3s",fontSize:10,color:"#0a5"}}>▼</span></button>{open&&(<div style={{padding:"0 16px 16px",animation:"fadeIn 0.4s ease-out",fontSize:13,lineHeight:1.9,color:"#0a8"}}>{children}</div>)}</div>);
+  return(<div style={{border:`1px solid ${open?GREEN+"40":"#0f320"}`,borderRadius:2,marginBottom:16,background:open?"rgba(0,255,51,0.015)":"rgba(0,255,51,0.005)",transition:"all 0.3s"}}><button onClick={()=>setOpen(!open)} style={{width:"100%",padding:"14px 16px",background:"transparent",border:"none",color:GREEN,fontFamily:"monospace",fontSize:11,letterSpacing:3,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",textAlign:"left"}}><span>{title}</span><span style={{transform:open?"rotate(180deg)":"rotate(0)",transition:"transform 0.3s",fontSize:10,color:"#0a5"}}>▼</span></button>{open&&(<div style={{padding:"0 16px 16px",animation:"fadeIn 0.4s ease-out",fontSize:13,lineHeight:1.9,color:"#0a8"}}>{children}</div>)}</div>);
 }
 
 export default function IChing(){
@@ -191,11 +191,14 @@ export default function IChing(){
           <div style={{fontSize:"clamp(8px,2.2vw,11px)",letterSpacing:8,color:"#0a5",marginBottom:12}}>NUMOGRAMMATIC DIVINATION ENGINE</div>
           <h1 style={{fontSize:"clamp(28px,8vw,52px)",fontWeight:400,letterSpacing:"0.15em",margin:"0 0 4px",lineHeight:1,textShadow:glitch?`-2px 0 #f00, 2px 0 ${PURPLE}`:`0 0 20px ${GREEN}, 0 0 40px ${GREEN}88, 0 0 60px ${GREEN}22`,transform:glitch?`translate(${Math.random()*4-2}px,${Math.random()*2-1}px)`:"none",transition:glitch?"none":"text-shadow 0.3s"}}>易 經</h1>
           <div style={{fontSize:"clamp(14px,4vw,22px)",letterSpacing:"0.35em",color:GREEN,textShadow:`0 0 10px ${GREEN}`,transform:glitch?"skewX(-2deg)":"none"}}>I CHING</div>
-          <div style={{fontSize:8,color:"#073",letterSpacing:4,marginTop:8}}>BOOK OF CHANGES ⌁ ORACLE PROTOCOL v1.0</div>
+          <div style={{fontSize:8,color:"#0e9",letterSpacing:4,marginTop:8}}>BOOK OF CHANGES ⌁ ORACLE PROTOCOL v1.0</div>
         </header>
 
         {phase==="intro"&&(
           <div style={{padding:"10px 0 30px",animation:"fadeIn 1s ease-out"}}>
+            <div style={{textAlign:"center",marginBottom:24}}>
+              <button onClick={startConsultation} style={{padding:"16px 44px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:14,letterSpacing:6,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18, inset 0 0 15px ${GREEN}08`,transition:"all 0.3s"}}>CONSULT THE ORACLE</button>
+            </div>
             <Collapsible title="WHAT IS THE I CHING?">
               <p style={{margin:"0 0 12px"}}>The <strong style={{color:GREEN}}>I Ching</strong> (易經), or "Book of Changes," is one of the oldest texts in human history — over 3,000 years old, originating in ancient China. It's a divination system, a philosophical guide, and a map of how change works in the universe.</p>
               <p style={{margin:"0 0 12px"}}>The core idea is that reality is always in flux between two fundamental forces: <strong style={{color:GREEN}}>Yang</strong> (the active, creative, solid) and <strong style={{color:GREEN}}>Yin</strong> (the receptive, yielding, open). These combine into 64 <strong style={{color:GREEN}}>hexagrams</strong> — six-line figures that each represent a specific situation or archetype.</p>
@@ -206,18 +209,15 @@ export default function IChing(){
             <Collapsible title="HOW DOES THE COIN METHOD WORK?">
               <p style={{margin:"0 0 12px"}}>This oracle uses the <strong style={{color:GREEN}}>three-coin method</strong>. For each of the six lines, three coins are thrown simultaneously.</p>
               <p style={{margin:"0 0 12px"}}>Each coin lands as <strong style={{color:GREEN}}>heads (value 3)</strong> or <strong style={{color:GREEN}}>tails (value 2)</strong>. The three values are added, giving a sum between 6 and 9:</p>
-              <div style={{fontFamily:"monospace",fontSize:12,lineHeight:2,margin:"8px 0 12px",color:GREEN}}>
-                <span style={{color:"#0a8"}}>Sum 6</span> → Old Yin (broken line, <span style={{color:PURPLE}}>changing</span>)<br/>
+              <div style={{fontFamily:"monospace",fontSize:13,lineHeight:2,margin:"8px 0 12px",color:GREEN}}>
+                <span style={{color:GREEN}}>Sum 6</span> → Old Yin (broken line, <span style={{color:PURPLE}}>changing</span>)<br/>
                 <span style={{color:GREEN}}>Sum 7</span> → Young Yang (solid line, stable)<br/>
                 <span style={{color:GREEN}}>Sum 8</span> → Young Yin (broken line, stable)<br/>
-                <span style={{color:"#0a8"}}>Sum 9</span> → Old Yang (solid line, <span style={{color:PURPLE}}>changing</span>)
+                <span style={{color:GREEN}}>Sum 9</span> → Old Yang (solid line, <span style={{color:PURPLE}}>changing</span>)
               </div>
               <p style={{margin:"0 0 12px"}}>Lines are built from the <strong style={{color:GREEN}}>bottom up</strong>. "Changing" lines (shown in <span style={{color:PURPLE}}>purple</span>) transform into their opposite, creating a second hexagram that shows the future direction.</p>
               <p style={{margin:0}}>After you click "Cast Coins," all six throws happen automatically.</p>
             </Collapsible>
-            <div style={{textAlign:"center",marginTop:8}}>
-              <button onClick={startConsultation} style={{padding:"14px 40px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:12,letterSpacing:6,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18, inset 0 0 15px ${GREEN}08`,transition:"all 0.3s"}}>CONSULT THE ORACLE</button>
-            </div>
           </div>
         )}
 
@@ -227,13 +227,13 @@ export default function IChing(){
             <div style={{fontSize:12,color:"#0a8",lineHeight:1.8,marginBottom:16,maxWidth:440,margin:"0 auto 16px",textAlign:"left",padding:"0 8px"}}>Focus on a specific situation or question. Open-ended questions work best — "What do I need to understand about..." rather than simple yes/no.</div>
             <textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do I need to understand about..." style={{width:"100%",maxWidth:440,height:80,background:"rgba(0,255,51,0.03)",border:`1px solid ${GREEN}40`,borderRadius:2,color:GREEN,fontFamily:"monospace",fontSize:13,padding:14,resize:"none",outline:"none",boxShadow:"inset 0 0 20px rgba(0,255,51,0.03)"}} onFocus={e=>e.target.style.borderColor=GREEN} onBlur={e=>e.target.style.borderColor=`${GREEN}40`}/>
             <div style={{marginTop:16}}><button onClick={runAllThrows} style={{padding:"12px 32px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:11,letterSpacing:5,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18`}}>CAST COINS</button></div>
-            <div style={{fontSize:9,color:"#052",marginTop:12,letterSpacing:2}}>SIX THROWS WILL BE CAST AUTOMATICALLY</div>
+            <div style={{fontSize:9,color:"#0c8",marginTop:12,letterSpacing:2}}>SIX THROWS WILL BE CAST AUTOMATICALLY</div>
           </div>
         )}
 
         {phase==="throwing"&&(
           <div style={{textAlign:"center",padding:"10px 0",animation:"fadeIn 0.3s ease-out"}}>
-            {question&&(<div style={{fontSize:10,color:"#073",letterSpacing:2,padding:"8px 14px",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,255,51,0.02)",maxWidth:440,margin:"0 auto 16px"}}>"{question.length>80?question.slice(0,80)+"...":question}"</div>)}
+            {question&&(<div style={{fontSize:10,color:"#0e9",letterSpacing:2,padding:"8px 14px",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,255,51,0.02)",maxWidth:440,margin:"0 auto 16px"}}>"{question.length>80?question.slice(0,80)+"...":question}"</div>)}
             <div style={{fontSize:9,color:"#0a5",letterSpacing:4,marginBottom:8}}>CASTING LINE {currentThrow+1} OF 6</div>
             <div style={{display:"flex",justifyContent:"center",gap:"clamp(4px,2vw,10px)",margin:"12px 0"}}>
               {[0,1,2].map(i=>(<div key={i} style={{border:`1px solid ${GREEN}25`,borderRadius:2,padding:4,background:"rgba(0,255,51,0.02)",minWidth:"clamp(76px,24vw,120px)"}}><AnimatedCoin result={coinResults[activeThrow]?coinResults[activeThrow].coins[i]:null} spinning={spinning} delay={i*150}/></div>))}
@@ -247,7 +247,7 @@ export default function IChing(){
             <div style={{margin:"12px auto",padding:"14px 0",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,0,0,0.4)",width:"fit-content"}}>
               <div style={{fontSize:8,color:"#0a5",letterSpacing:4,marginBottom:10,textAlign:"center"}}>HEXAGRAM FORMING</div>
               <div style={{display:"flex",flexDirection:"column-reverse",gap:3,alignItems:"center",padding:"0 24px"}}>
-                {[0,1,2,3,4,5].map(i=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#052",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={lines[i]?.yang} changing={lines[i]?.changing} revealed={i<lines.length} animDelay={0}/><span style={{fontSize:7,width:28,flexShrink:0,textAlign:"left",color:lines[i]?.changing?PURPLE:"#052"}}>{lines[i]?`[${lines[i].sum}]`:""}{lines[i]?.changing?" ✕":""}</span></div>))}
+                {[0,1,2,3,4,5].map(i=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={lines[i]?.yang} changing={lines[i]?.changing} revealed={i<lines.length} animDelay={0}/><span style={{fontSize:7,width:28,flexShrink:0,textAlign:"left",color:lines[i]?.changing?PURPLE:"#052"}}>{lines[i]?`[${lines[i].sum}]`:""}{lines[i]?.changing?" ✕":""}</span></div>))}
               </div>
             </div>
           </div>
@@ -255,7 +255,7 @@ export default function IChing(){
 
         {phase==="reading"&&hexagram&&(
           <div style={{padding:"10px 0 40px",animation:"fadeIn 0.8s ease-out"}}>
-            {question&&(<div style={{textAlign:"center",fontSize:11,color:"#0a8",letterSpacing:1,marginBottom:20,padding:"10px 16px",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,255,51,0.02)",lineHeight:1.6}}>Your question: "{question}"</div>)}
+            {question&&(<div style={{textAlign:"center",fontSize:"clamp(12px,3.2vw,14px)",color:"#0a8",letterSpacing:1,marginBottom:20,padding:"10px 16px",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,255,51,0.02)",lineHeight:1.6}}>Your question: "{question}"</div>)}
             <div style={{border:`1px solid ${GREEN}60`,borderRadius:2,padding:"24px 20px",background:"rgba(0,255,51,0.02)",boxShadow:`0 0 30px ${GREEN}08, inset 0 0 30px ${GREEN}05`,marginBottom:24}}>
               <div style={{textAlign:"center",marginBottom:20}}>
                 <div style={{fontSize:9,color:"#0a5",letterSpacing:6,marginBottom:4}}>PRIMARY HEXAGRAM</div>
@@ -265,30 +265,30 @@ export default function IChing(){
               </div>
               <div style={{margin:"16px auto",padding:"14px 0",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,0,0,0.3)",width:"fit-content"}}>
                 <div style={{display:"flex",flexDirection:"column-reverse",gap:4,alignItems:"center",padding:"0 24px"}}>
-                  {lines.map((l,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#052",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={l.yang} changing={l.changing} revealed={true} animDelay={i*120}/><span style={{fontSize:8,width:36,flexShrink:0,textAlign:"left",color:l.changing?PURPLE:"#052"}}>[{l.sum}]{l.changing?" ✕":""}</span></div>))}
+                  {lines.map((l,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={l.yang} changing={l.changing} revealed={true} animDelay={i*120}/><span style={{fontSize:8,width:36,flexShrink:0,textAlign:"left",color:l.changing?PURPLE:"#052"}}>[{l.sum}]{l.changing?" ✕":""}</span></div>))}
                 </div>
               </div>
               {showReading&&(
                 <div style={{animation:"fadeIn 1s ease-out"}}>
                   <div style={{margin:"20px 0",padding:"18px",borderLeft:`3px solid ${GREEN}`,background:"rgba(0,255,51,0.025)",borderRadius:"0 2px 2px 0"}}>
                     <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>WHAT THIS MEANS FOR YOU</div>
-                    <div style={{fontSize:15,lineHeight:1.9,color:"#cde6cf"}}>{hexagram.explain}</div>
+                    <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#ddf2df"}}>{hexagram.explain}</div>
                   </div>
                   <div style={{margin:"16px 0",padding:"18px",borderLeft:`3px solid ${GREEN}80`,background:"rgba(0,255,51,0.015)",borderRadius:"0 2px 2px 0"}}>
                     <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>THE JUDGMENT</div>
-                    <div style={{fontSize:15,lineHeight:1.9,color:"#b0d4b3",fontStyle:"italic"}}>{hexagram.judge}</div>
-                    <div style={{fontSize:12,lineHeight:1.8,color:"#7a9e7d",marginTop:8}}>The Judgment is the oracle's core advice — the essential message about your situation. Read it slowly and consider how it applies to your question.</div>
+                    <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#c8e8cb",fontStyle:"italic"}}>{hexagram.judge}</div>
+                    <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#8fc493",marginTop:8}}>The Judgment is the oracle's core advice — the essential message about your situation. Read it slowly and consider how it applies to your question.</div>
                   </div>
                   <div style={{margin:"16px 0",padding:"18px",borderLeft:"3px solid #0a5",background:"rgba(0,255,51,0.01)",borderRadius:"0 2px 2px 0"}}>
                     <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>THE IMAGE</div>
-                    <div style={{fontSize:15,lineHeight:1.9,color:"#93b896",fontStyle:"italic"}}>{hexagram.image}</div>
-                    <div style={{fontSize:12,lineHeight:1.8,color:"#7a9e7d",marginTop:8}}>The Image is a metaphor drawn from nature that shows you how to embody this hexagram's wisdom in daily life.</div>
+                    <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#b0d4b3",fontStyle:"italic"}}>{hexagram.image}</div>
+                    <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#8fc493",marginTop:8}}>The Image is a metaphor drawn from nature that shows you how to embody this hexagram's wisdom in daily life.</div>
                   </div>
                   {lines.some(l=>l.changing)&&(
                     <div style={{margin:"16px 0",padding:"18px",borderLeft:`3px solid ${PURPLE}`,background:"rgba(180,74,255,0.03)",borderRadius:"0 2px 2px 0"}}>
                       <div style={{fontSize:10,color:PURPLE_DIM,letterSpacing:4,marginBottom:10}}>CHANGING LINES</div>
-                      <div style={{fontSize:12,lineHeight:1.8,color:"#9a7dae",marginBottom:12}}>Changing lines show where transformation is actively happening — the specific points of movement in your situation. These lines are shifting from one state to another, creating the Relating Hexagram below.</div>
-                      {lines.map((l,i)=>l.changing?(<div key={i} style={{fontSize:13,color:PURPLE,marginBottom:8,lineHeight:1.7,textShadow:`0 0 4px ${PURPLE}44`,padding:"6px 0",borderBottom:`1px solid ${PURPLE}15`}}>⚡ <strong>{lineLabels[i]} line</strong> ({l.yang?"Yang → Yin":"Yin → Yang"}) — Position {i+1} {i<3?"(inner/lower trigram)":"(outer/upper trigram)"} is in active transition.</div>):null)}
+                      <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#c4a0d9",marginBottom:12}}>Changing lines show where transformation is actively happening — the specific points of movement in your situation. These lines are shifting from one state to another, creating the Relating Hexagram below.</div>
+                      {lines.map((l,i)=>l.changing?(<div key={i} style={{fontSize:"clamp(14px,3.8vw,16px)",color:PURPLE,marginBottom:8,lineHeight:1.7,textShadow:`0 0 4px ${PURPLE}44`,padding:"6px 0",borderBottom:`1px solid ${PURPLE}15`}}>⚡ <strong>{lineLabels[i]} line</strong> ({l.yang?"Yang → Yin":"Yin → Yang"}) — Position {i+1} {i<3?"(inner/lower trigram)":"(outer/upper trigram)"} is in active transition.</div>):null)}
                     </div>
                   )}
                 </div>
@@ -298,32 +298,32 @@ export default function IChing(){
               <div style={{border:`1px solid ${PURPLE}44`,borderRadius:2,padding:"24px 20px",background:"rgba(180,74,255,0.02)",boxShadow:`0 0 20px ${PURPLE}08`,marginBottom:24,animation:"fadeIn 1.2s ease-out"}}>
                 <div style={{textAlign:"center",marginBottom:16}}>
                   <div style={{fontSize:9,color:PURPLE_DIM,letterSpacing:6}}>RELATING HEXAGRAM</div>
-                  <div style={{fontSize:11,color:"#6a3d8a",letterSpacing:2,marginTop:4,lineHeight:1.6}}>This is where your situation is heading. The changing lines transform the primary hexagram into this one.</div>
+                  <div style={{fontSize:11,color:"#a06cc8",letterSpacing:2,marginTop:4,lineHeight:1.6}}>This is where your situation is heading. The changing lines transform the primary hexagram into this one.</div>
                   <div style={{fontSize:"clamp(32px,8vw,48px)",margin:"12px 0",textShadow:`0 0 15px ${PURPLE}, 0 0 30px ${PURPLE}44`,color:PURPLE}}>{relatingHex.tri[0]}<br/>{relatingHex.tri[1]}</div>
                   <div style={{fontSize:"clamp(18px,4.5vw,26px)",letterSpacing:"0.15em",color:PURPLE,textShadow:`0 0 8px ${PURPLE}`}}>{relatingHex.n}. {relatingHex.name}</div>
                   <div style={{fontSize:"clamp(12px,3vw,15px)",color:PURPLE_DIM,letterSpacing:3,marginTop:4}}>{relatingHex.eng.toUpperCase()}</div>
                 </div>
                 <div style={{margin:"16px 0",padding:"18px",borderLeft:`3px solid ${PURPLE}60`,background:"rgba(180,74,255,0.02)",borderRadius:"0 2px 2px 0"}}>
                   <div style={{fontSize:10,color:PURPLE_DIM,letterSpacing:4,marginBottom:10}}>WHERE THIS IS HEADING</div>
-                  <div style={{fontSize:15,lineHeight:1.9,color:"#c9b0de"}}>{relatingHex.explain}</div>
+                  <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#dcc8ee"}}>{relatingHex.explain}</div>
                 </div>
                 <div style={{margin:"12px 0 0",padding:"18px",borderLeft:`3px solid ${PURPLE}40`,background:"rgba(180,74,255,0.015)",borderRadius:"0 2px 2px 0"}}>
                   <div style={{fontSize:10,color:PURPLE_DIM,letterSpacing:4,marginBottom:10}}>JUDGMENT</div>
-                  <div style={{fontSize:14,lineHeight:1.9,color:"#b59ecf",fontStyle:"italic"}}>{relatingHex.judge}</div>
+                  <div style={{fontSize:"clamp(15px,4vw,18px)",lineHeight:2,color:"#d4b8ea",fontStyle:"italic"}}>{relatingHex.judge}</div>
                 </div>
               </div>
             )}
             {showReading&&(
               <div style={{textAlign:"center",marginTop:28,animation:"fadeIn 1.5s ease-out"}}>
                 <button onClick={startConsultation} style={{padding:"14px 36px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:12,letterSpacing:5,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18`}}>NEW CONSULTATION</button>
-                <button onClick={()=>setPhase("intro")} style={{padding:"14px 24px",background:"transparent",border:"1px solid #44444440",color:"#666",fontFamily:"monospace",fontSize:11,letterSpacing:3,cursor:"pointer",borderRadius:2,marginLeft:12}}>RETURN</button>
+                <button onClick={()=>setPhase("intro")} style={{padding:"14px 24px",background:"transparent",border:"1px solid #44444440",color:"#0c8",fontFamily:"monospace",fontSize:11,letterSpacing:3,cursor:"pointer",borderRadius:2,marginLeft:12}}>RETURN</button>
               </div>
             )}
           </div>
         )}
 
-        <footer style={{textAlign:"center",padding:"40px 0 20px",borderTop:"1px solid #111",marginTop:40}}>
-          <div style={{fontSize:8,color:"#333",letterSpacing:4,lineHeight:2.2}}>SYSTEM DERIVED FROM THE BOOK OF CHANGES<br/>THREE-COIN METHOD ⌁ KING WEN SEQUENCE<br/>NUMOGRAMMATIC ORACLE ENGINE v1.0</div>
+        <footer style={{textAlign:"center",padding:"40px 0 20px",borderTop:"1px solid #0f320",marginTop:40}}>
+          <div style={{fontSize:8,color:"#0c8",letterSpacing:4,lineHeight:2.2}}>SYSTEM DERIVED FROM THE BOOK OF CHANGES<br/>THREE-COIN METHOD ⌁ KING WEN SEQUENCE<br/>NUMOGRAMMATIC ORACLE ENGINE v1.0</div>
         </footer>
       </div>
 
