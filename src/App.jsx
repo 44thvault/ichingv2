@@ -312,6 +312,7 @@ function HexagramLine({ yang, changing, revealed, animDelay }) {
 // ── MAIN APP ──
 export default function IChing() {
   const [phase, setPhase] = useState("intro"); // intro | question | throwing | reading
+  const [throwSub, setThrowSub] = useState("ready"); // ready | animating | result
   const [question, setQuestion] = useState("");
   const [currentThrow, setCurrentThrow] = useState(0); // 0-5
   const [lines, setLines] = useState([]);
@@ -321,6 +322,12 @@ export default function IChing() {
   const [relatingHex, setRelatingHex] = useState(null);
   const [glitch, setGlitch] = useState(false);
   const [showReading, setShowReading] = useState(false);
+
+  // Refs to avoid stale closures in timeouts
+  const linesRef = useRef([]);
+  const throwRef = useRef(0);
+  linesRef.current = lines;
+  throwRef.current = currentThrow;
 
   // Glitch effect
   useEffect(() => {
@@ -333,33 +340,40 @@ export default function IChing() {
 
   const startConsultation = () => {
     setPhase("question");
+    setThrowSub("ready");
     setCurrentThrow(0);
     setLines([]);
+    linesRef.current = [];
+    throwRef.current = 0;
     setCoinResult(null);
+    setSpinning(false);
     setHexagram(null);
     setRelatingHex(null);
     setShowReading(false);
   };
 
   const beginThrow = () => {
-    if (currentThrow >= 6) return;
+    if (throwRef.current >= 6) return;
     setPhase("throwing");
+    setThrowSub("animating");
     setSpinning(true);
     setCoinResult(null);
     const result = throwCoins();
     setTimeout(() => {
       setCoinResult(result);
       setSpinning(false);
+      // Record the line after a brief display pause
       setTimeout(() => {
-        const newLines = [...lines, result];
+        const newLines = [...linesRef.current, result];
         setLines(newLines);
-        const next = currentThrow + 1;
+        linesRef.current = newLines;
+        const next = throwRef.current + 1;
         setCurrentThrow(next);
+        throwRef.current = next;
         if (next >= 6) {
-          // All 6 lines thrown
+          // All 6 lines thrown — compute hexagram
           const hex = lookupHexagram(newLines);
           setHexagram(hex);
-          // Check for relating hexagram (changing lines)
           const hasChanging = newLines.some(l => l.changing);
           if (hasChanging) {
             const changedLines = newLines.map(l => ({
@@ -375,11 +389,10 @@ export default function IChing() {
             setTimeout(() => setShowReading(true), 800);
           }, 600);
         } else {
-          setPhase("throwing");
-          setSpinning(false);
-          setCoinResult(null);
+          // Show result and wait for user to click next
+          setThrowSub("result");
         }
-      }, 1200);
+      }, 800);
     }, 1500 + Math.random() * 800);
   };
 
@@ -522,7 +535,7 @@ export default function IChing() {
             )}
 
             <div style={{ fontSize: 9, color: "#0a5", letterSpacing: 4, marginBottom: 8 }}>
-              {coinResult ? `THROW ${currentThrow + 1} COMPLETE` : `THROWING COINS — LINE ${currentThrow + 1} OF 6`}
+              {throwSub === "result" ? `THROW ${currentThrow} COMPLETE` : throwSub === "animating" ? `THROWING COINS — LINE ${currentThrow + 1} OF 6` : `READY — LINE ${currentThrow + 1} OF 6`}
             </div>
 
             {/* Coins display */}
@@ -559,7 +572,7 @@ export default function IChing() {
                   color: coinResult.changing ? "#ff0" : "#0f3",
                   textShadow: coinResult.changing ? "0 0 8px #ff0" : "0 0 4px #0f3",
                 }}>
-                  {lineLabels[currentThrow]} LINE → {lineTypeNames[coinResult.lineType]}
+                  {lineLabels[currentThrow - 1]} LINE → {lineTypeNames[coinResult.lineType]}
                   {coinResult.changing && " ⚡ CHANGING"}
                 </div>
               </div>
@@ -588,7 +601,7 @@ export default function IChing() {
             </div>
 
             {/* Next throw button */}
-            {coinResult && currentThrow < 6 && (
+            {throwSub === "result" && currentThrow < 6 && (
               <button onClick={beginThrow} style={{
                 padding: "10px 28px", background: "transparent",
                 border: "1px solid #0f3", color: "#0f3",
@@ -597,7 +610,7 @@ export default function IChing() {
                 boxShadow: "0 0 12px #0f318",
                 animation: "fadeIn 0.5s ease-out",
               }}>
-                {currentThrow < 5 ? `THROW LINE ${currentThrow + 2}` : "FINAL THROW"}
+                {currentThrow < 5 ? `THROW LINE ${currentThrow + 1}` : "FINAL THROW"}
               </button>
             )}
           </div>
