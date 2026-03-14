@@ -188,7 +188,7 @@ export default function IChing(){
 
       <div style={{position:"relative",zIndex:2,maxWidth:620,margin:"0 auto",padding:"20px 16px"}}>
         <header style={{textAlign:"center",padding:"30px 0 20px"}}>
-          <div style={{fontSize:"clamp(8px,2.2vw,11px)",letterSpacing:8,color:"#0a5",marginBottom:12}}>NUMOGRAMMATIC DIVINATION ENGINE</div>
+          <div style={{fontSize:"clamp(8px,2.2vw,11px)",letterSpacing:8,color:"#0a5",marginBottom:12}}>ANCIENT DIVINATION SYSTEM ⌁ 64 HEXAGRAMS</div>
           <h1 style={{fontSize:"clamp(28px,8vw,52px)",fontWeight:400,letterSpacing:"0.15em",margin:"0 0 4px",lineHeight:1,textShadow:glitch?`-2px 0 #f00, 2px 0 ${PURPLE}`:`0 0 20px ${GREEN}, 0 0 40px ${GREEN}88, 0 0 60px ${GREEN}22`,transform:glitch?`translate(${Math.random()*4-2}px,${Math.random()*2-1}px)`:"none",transition:glitch?"none":"text-shadow 0.3s"}}>易 經</h1>
           <div style={{fontSize:"clamp(14px,4vw,22px)",letterSpacing:"0.35em",color:GREEN,textShadow:`0 0 10px ${GREEN}`,transform:glitch?"skewX(-2deg)":"none"}}>I CHING</div>
           <div style={{fontSize:8,color:"#0e9",letterSpacing:4,marginTop:8}}>BOOK OF CHANGES ⌁ ORACLE PROTOCOL v1.0</div>
@@ -323,7 +323,7 @@ export default function IChing(){
         )}
 
         <footer style={{textAlign:"center",padding:"40px 0 20px",borderTop:"1px solid #0f320",marginTop:40}}>
-          <div style={{fontSize:8,color:"#0c8",letterSpacing:4,lineHeight:2.2}}>SYSTEM DERIVED FROM THE BOOK OF CHANGES<br/>THREE-COIN METHOD ⌁ KING WEN SEQUENCE<br/>NUMOGRAMMATIC ORACLE ENGINE v1.0</div>
+          <div style={{fontSize:8,color:"#0c8",letterSpacing:4,lineHeight:2.2}}>SYSTEM DERIVED FROM THE BOOK OF CHANGES<br/>THREE-COIN METHOD ⌁ KING WEN SEQUENCE<br/>ORACLE ENGINE v1.0</div>
         </footer>
       </div>
 
