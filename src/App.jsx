@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { THC_TETRAGRAMS, throwTHCLine, lookupTHC } from "./thc.js";
 
 const PURPLE = "#b44aff";
 const PURPLE_DIM = "#7a2db8";
@@ -141,12 +142,24 @@ function HexagramLine({yang,changing,revealed,animDelay}){
   return(<div style={{height:20,display:"flex",alignItems:"center",justifyContent:"center",width:LINE_W,animation:"lineReveal 0.4s ease-out"}}>{yang?(<div style={{width:LINE_W,height:5,background:lineColor,boxShadow:glow,borderRadius:1}}/>):(<div style={{display:"flex",width:LINE_W,justifyContent:"space-between"}}><div style={{width:segW,height:5,background:lineColor,boxShadow:glow,borderRadius:1}}/><div style={{width:segW,height:5,background:lineColor,boxShadow:glow,borderRadius:1}}/></div>)}</div>);
 }
 
+// ── THC TETRAGRAM LINE (ternary: 0=solid, 1=once-broken, 2=twice-broken) ──
+function TetragramLine({value,revealed,animDelay}){
+  const[show,setShow]=useState(false);
+  useEffect(()=>{if(revealed){const t=setTimeout(()=>setShow(true),animDelay);return()=>clearTimeout(t)}else{setShow(false)}},[revealed,animDelay]);
+  if(!show)return(<div style={{height:20,display:"flex",alignItems:"center",justifyContent:"center",width:LINE_W}}><span style={{fontFamily:"monospace",color:GREEN,fontSize:9,letterSpacing:4,opacity:0.15}}>· · · · · · ·</span></div>);
+  const glow=`0 0 8px ${GREEN}`;const segW=(LINE_W-12)/2;const seg3W=(LINE_W-24)/3;
+  if(value===0)return(<div style={{height:20,display:"flex",alignItems:"center",justifyContent:"center",width:LINE_W,animation:"lineReveal 0.4s ease-out"}}><div style={{width:LINE_W,height:5,background:GREEN,boxShadow:glow,borderRadius:1}}/></div>);
+  if(value===1)return(<div style={{height:20,display:"flex",alignItems:"center",justifyContent:"center",width:LINE_W,animation:"lineReveal 0.4s ease-out"}}><div style={{display:"flex",width:LINE_W,justifyContent:"space-between"}}><div style={{width:segW,height:5,background:GREEN,boxShadow:glow,borderRadius:1}}/><div style={{width:segW,height:5,background:GREEN,boxShadow:glow,borderRadius:1}}/></div></div>);
+  return(<div style={{height:20,display:"flex",alignItems:"center",justifyContent:"center",width:LINE_W,animation:"lineReveal 0.4s ease-out"}}><div style={{display:"flex",width:LINE_W,justifyContent:"space-between"}}><div style={{width:seg3W,height:5,background:GREEN,boxShadow:glow,borderRadius:1}}/><div style={{width:seg3W,height:5,background:GREEN,boxShadow:glow,borderRadius:1}}/><div style={{width:seg3W,height:5,background:GREEN,boxShadow:glow,borderRadius:1}}/></div></div>);
+}
+
 function Collapsible({title,children}){
   const[open,setOpen]=useState(false);
   return(<div style={{border:`1px solid ${open?GREEN+"40":"#0f320"}`,borderRadius:2,marginBottom:16,background:open?"rgba(0,255,51,0.015)":"rgba(0,255,51,0.005)",transition:"all 0.3s"}}><button onClick={()=>setOpen(!open)} style={{width:"100%",padding:"14px 16px",background:"transparent",border:"none",color:GREEN,fontFamily:"monospace",fontSize:11,letterSpacing:3,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",textAlign:"left"}}><span>{title}</span><span style={{transform:open?"rotate(180deg)":"rotate(0)",transition:"transform 0.3s",fontSize:10,color:"#0a5"}}>▼</span></button>{open&&(<div style={{padding:"0 16px 16px",animation:"fadeIn 0.4s ease-out",fontSize:13,lineHeight:1.9,color:"#0a8"}}>{children}</div>)}</div>);
 }
 
 export default function IChing(){
+  const[mode,setMode]=useState("iching"); // "iching" | "thc"
   const[phase,setPhase]=useState("intro");
   const[question,setQuestion]=useState("");
   const[currentThrow,setCurrentThrow]=useState(0);
@@ -158,10 +171,29 @@ export default function IChing(){
   const[relatingHex,setRelatingHex]=useState(null);
   const[glitch,setGlitch]=useState(false);
   const[showReading,setShowReading]=useState(false);
+  // THC state
+  const[thcResult,setThcResult]=useState(null);
 
   useEffect(()=>{const iv=setInterval(()=>{setGlitch(true);setTimeout(()=>setGlitch(false),100+Math.random()*150)},4000+Math.random()*6000);return()=>clearInterval(iv)},[]);
 
-  const startConsultation=()=>{setPhase("question");setCurrentThrow(0);setLines([]);setCoinResults([]);setActiveThrow(-1);setSpinning(false);setHexagram(null);setRelatingHex(null);setShowReading(false)};
+  const startConsultation=()=>{setPhase("question");setCurrentThrow(0);setLines([]);setCoinResults([]);setActiveThrow(-1);setSpinning(false);setHexagram(null);setRelatingHex(null);setShowReading(false);setThcResult(null)};
+
+  const switchMode=(m)=>{setMode(m);setPhase("intro");setLines([]);setCoinResults([]);setHexagram(null);setRelatingHex(null);setShowReading(false);setThcResult(null)};
+
+  // THC automated throws (4 lines, top-down)
+  const runTHCThrows=useCallback(()=>{
+    setPhase("throwing");
+    const allResults=[];for(let i=0;i<4;i++)allResults.push(throwTHCLine());
+    let throwIndex=0;
+    const doThrow=()=>{
+      if(throwIndex>=4){setTimeout(()=>{const tet=lookupTHC(allResults.map(r=>r.value));setThcResult(tet);setPhase("reading");setTimeout(()=>setShowReading(true),600)},400);return}
+      const i=throwIndex;setActiveThrow(i);setSpinning(true);setCurrentThrow(i);
+      setTimeout(()=>{setCoinResults(prev=>[...prev,allResults[i]]);setSpinning(false);
+        setTimeout(()=>{setLines(prev=>[...prev,allResults[i]]);throwIndex++;setTimeout(doThrow,600)},500);
+      },1200+Math.random()*400);
+    };
+    doThrow();
+  },[]);
 
   const runAllThrows=useCallback(()=>{
     setPhase("throwing");
@@ -190,8 +222,15 @@ export default function IChing(){
         <header style={{textAlign:"center",padding:"30px 0 20px"}}>
           <div style={{fontSize:"clamp(8px,2.2vw,11px)",letterSpacing:8,color:"#0a5",marginBottom:12}}>ANCIENT DIVINATION SYSTEM ⌁ 64 HEXAGRAMS</div>
           <h1 style={{fontSize:"clamp(28px,8vw,52px)",fontWeight:400,letterSpacing:"0.15em",margin:"0 0 4px",lineHeight:1,textShadow:glitch?`-2px 0 #f00, 2px 0 ${PURPLE}`:`0 0 20px ${GREEN}, 0 0 40px ${GREEN}88, 0 0 60px ${GREEN}22`,transform:glitch?`translate(${Math.random()*4-2}px,${Math.random()*2-1}px)`:"none",transition:glitch?"none":"text-shadow 0.3s"}}>易 經</h1>
-          <div style={{fontSize:"clamp(14px,4vw,22px)",letterSpacing:"0.35em",color:GREEN,textShadow:`0 0 10px ${GREEN}`,transform:glitch?"skewX(-2deg)":"none"}}>I CHING</div>
-          <div style={{fontSize:8,color:"#0e9",letterSpacing:4,marginTop:8}}>BOOK OF CHANGES ⌁ ORACLE PROTOCOL v1.0</div>
+          <div style={{fontSize:"clamp(14px,4vw,22px)",letterSpacing:"0.35em",color:GREEN,textShadow:`0 0 10px ${GREEN}`,transform:glitch?"skewX(-2deg)":"none"}}>{mode==="iching"?"I CHING":"T\u2019AI HSÜAN CHING"}</div>
+          <div style={{fontSize:8,color:"#0e9",letterSpacing:4,marginTop:8}}>
+            {mode==="iching"?"BOOK OF CHANGES ⌁ 64 HEXAGRAMS":"CANON OF SUPREME MYSTERY ⌁ 81 TETRAGRAMS"}
+          </div>
+          {/* Mode toggle */}
+          <div style={{display:"flex",justifyContent:"center",gap:0,marginTop:16}}>
+            <button onClick={()=>switchMode("iching")} style={{padding:"8px 20px",background:mode==="iching"?"rgba(0,255,51,0.1)":"transparent",border:`1px solid ${mode==="iching"?GREEN:GREEN+"30"}`,borderRight:"none",color:mode==="iching"?GREEN:GREEN+"60",fontFamily:"monospace",fontSize:10,letterSpacing:3,cursor:"pointer",borderRadius:"2px 0 0 2px",transition:"all 0.3s"}}>易經 I CHING</button>
+            <button onClick={()=>switchMode("thc")} style={{padding:"8px 20px",background:mode==="thc"?"rgba(0,255,51,0.1)":"transparent",border:`1px solid ${mode==="thc"?GREEN:GREEN+"30"}`,color:mode==="thc"?GREEN:GREEN+"60",fontFamily:"monospace",fontSize:10,letterSpacing:3,cursor:"pointer",borderRadius:"0 2px 2px 0",transition:"all 0.3s"}}>太玄經 T'AI HSÜAN CHING</button>
+          </div>
         </header>
 
         {phase==="intro"&&(
@@ -199,12 +238,13 @@ export default function IChing(){
             <div style={{textAlign:"center",marginBottom:24}}>
               <button onClick={startConsultation} style={{padding:"16px 44px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:14,letterSpacing:6,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18, inset 0 0 15px ${GREEN}08`,transition:"all 0.3s"}}>CONSULT THE ORACLE</button>
             </div>
+            {mode==="iching"?(<>
             <Collapsible title="WHAT IS THE I CHING?">
               <p style={{margin:"0 0 12px"}}>The <strong style={{color:GREEN}}>I Ching</strong> (易經), or "Book of Changes," is one of the oldest texts in human history — over 3,000 years old, originating in ancient China. It's a divination system, a philosophical guide, and a map of how change works in the universe.</p>
               <p style={{margin:"0 0 12px"}}>The core idea is that reality is always in flux between two fundamental forces: <strong style={{color:GREEN}}>Yang</strong> (the active, creative, solid) and <strong style={{color:GREEN}}>Yin</strong> (the receptive, yielding, open). These combine into 64 <strong style={{color:GREEN}}>hexagrams</strong> — six-line figures that each represent a specific situation or archetype.</p>
-              <p style={{margin:"0 0 12px"}}>When you consult the oracle, you ask a question and then generate a hexagram through a random process. The randomness is the point — it creates an opening for insight that your conscious mind might block.</p>
+              <p style={{margin:"0 0 12px"}}>When you consult the oracle, you ask a question and then generate a hexagram through a random process. The randomness creates an opening for insight that your conscious mind might block.</p>
               <p style={{margin:"0 0 12px"}}>Each hexagram has a <strong style={{color:GREEN}}>Judgment</strong> (the core advice) and an <strong style={{color:GREEN}}>Image</strong> (a metaphor from nature). Some lines may be "changing" — these transform the hexagram into a <strong style={{color:PURPLE}}>Relating Hexagram</strong>, which shows where your situation is heading.</p>
-              <p style={{margin:0}}>The I Ching doesn't predict the future — it mirrors your present situation and offers ancient wisdom about how to navigate it. Think of it as a conversation with 3,000 years of accumulated human insight.</p>
+              <p style={{margin:0}}>The I Ching doesn't predict the future — it mirrors your present situation and offers ancient wisdom about how to navigate it.</p>
             </Collapsible>
             <Collapsible title="HOW DOES THE COIN METHOD WORK?">
               <p style={{margin:"0 0 12px"}}>This oracle uses the <strong style={{color:GREEN}}>three-coin method</strong>. For each of the six lines, three coins are thrown simultaneously.</p>
@@ -215,23 +255,43 @@ export default function IChing(){
                 <span style={{color:GREEN}}>Sum 8</span> → Young Yin (broken line, stable)<br/>
                 <span style={{color:GREEN}}>Sum 9</span> → Old Yang (solid line, <span style={{color:PURPLE}}>changing</span>)
               </div>
-              <p style={{margin:"0 0 12px"}}>Lines are built from the <strong style={{color:GREEN}}>bottom up</strong>. "Changing" lines (shown in <span style={{color:PURPLE}}>purple</span>) transform into their opposite, creating a second hexagram that shows the future direction.</p>
+              <p style={{margin:"0 0 12px"}}>Lines are built from the <strong style={{color:GREEN}}>bottom up</strong>. "Changing" lines (shown in <span style={{color:PURPLE}}>purple</span>) transform into their opposite, creating a second hexagram.</p>
               <p style={{margin:0}}>After you click "Cast Coins," all six throws happen automatically.</p>
             </Collapsible>
+            </>):(<>
+            <Collapsible title="WHAT IS THE T'AI HSÜAN CHING?">
+              <p style={{margin:"0 0 12px"}}>The <strong style={{color:GREEN}}>T'ai Hsüan Ching</strong> (太玄經), or "Canon of Supreme Mystery," was composed by the scholar <strong style={{color:GREEN}}>Yang Xiong</strong> in 2 BCE as a companion and expansion of the I Ching. It is translated into English as <strong style={{color:GREEN}}>The Elemental Changes</strong> by Michael Nylan.</p>
+              <p style={{margin:"0 0 12px"}}>Where the I Ching uses a <strong style={{color:GREEN}}>binary</strong> system (yin/yang, 2 line types, 64 hexagrams), the T'ai Hsüan Ching uses a <strong style={{color:GREEN}}>ternary</strong> system with three forces: <strong style={{color:GREEN}}>Heaven</strong> (solid line), <strong style={{color:GREEN}}>Earth</strong> (once-broken), and <strong style={{color:GREEN}}>Man</strong> (twice-broken). Four lines combine into 81 <strong style={{color:GREEN}}>tetragrams</strong>.</p>
+              <p style={{margin:"0 0 12px"}}>The 81 tetragrams are divided into three realms: <strong style={{color:GREEN}}>T'ien</strong> (Heaven, 1–27), <strong style={{color:GREEN}}>Jen</strong> (Man, 28–54), and <strong style={{color:GREEN}}>Ti</strong> (Earth, 55–81). This mirrors the Tao Te Ching's 81 chapters — not a coincidence.</p>
+              <p style={{margin:0}}>The T'ai Hsüan Ching situates human endeavor within cosmic energies, assessing the rival claims of fame, immortality, wealth, and power. It is one of the great philosophical poems of world literature.</p>
+            </Collapsible>
+            <Collapsible title="HOW DOES THE TERNARY COIN METHOD WORK?">
+              <p style={{margin:"0 0 12px"}}>This oracle uses Nylan's <strong style={{color:GREEN}}>four-coin method</strong>. For each of the four lines, two pairs of coins are thrown.</p>
+              <p style={{margin:"0 0 12px"}}>For each pair, if both coins land tails, they are re-thrown. The total number of heads across both pairs determines the line:</p>
+              <div style={{fontFamily:"monospace",fontSize:13,lineHeight:2,margin:"8px 0 12px",color:GREEN}}>
+                2 heads → <strong>Heaven ⚊</strong> (solid line)<br/>
+                3 heads → <strong>Earth ⚋</strong> (once-broken line)<br/>
+                4 heads → <strong>Man 𝌀</strong> (twice-broken line)
+              </div>
+              <p style={{margin:"0 0 12px"}}>Unlike the I Ching, tetragram lines are built from the <strong style={{color:GREEN}}>top down</strong>. There are no "changing lines" — each consultation produces a single tetragram.</p>
+              <p style={{margin:0}}>After you click "Cast Coins," all four throws happen automatically.</p>
+            </Collapsible>
+            </>)}
           </div>
         )}
 
         {phase==="question"&&(
           <div style={{textAlign:"center",padding:"20px 0",animation:"fadeIn 0.6s ease-out"}}>
             <div style={{fontSize:9,color:"#0a5",letterSpacing:4,marginBottom:16}}>FORMULATE YOUR INQUIRY</div>
-            <div style={{fontSize:12,color:"#0a8",lineHeight:1.8,marginBottom:16,maxWidth:440,margin:"0 auto 16px",textAlign:"left",padding:"0 8px"}}>Focus on a specific situation or question. Open-ended questions work best — "What do I need to understand about..." rather than simple yes/no.</div>
+            <div style={{fontSize:12,color:"#0a8",lineHeight:1.8,marginBottom:16,maxWidth:440,margin:"0 auto 16px",textAlign:"left",padding:"0 8px"}}>{mode==="iching"?"Focus on a specific situation or question. Open-ended questions work best — \"What do I need to understand about...\" rather than simple yes/no.":"The T'ai Hsüan Ching responds best to questions about the nature of your situation and the forces at work within it. Ask what you need to see."}</div>
             <textarea value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What do I need to understand about..." style={{width:"100%",maxWidth:440,height:80,background:"rgba(0,255,51,0.03)",border:`1px solid ${GREEN}40`,borderRadius:2,color:GREEN,fontFamily:"monospace",fontSize:13,padding:14,resize:"none",outline:"none",boxShadow:"inset 0 0 20px rgba(0,255,51,0.03)"}} onFocus={e=>e.target.style.borderColor=GREEN} onBlur={e=>e.target.style.borderColor=`${GREEN}40`}/>
-            <div style={{marginTop:16}}><button onClick={runAllThrows} style={{padding:"12px 32px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:11,letterSpacing:5,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18`}}>CAST COINS</button></div>
-            <div style={{fontSize:9,color:"#0c8",marginTop:12,letterSpacing:2}}>SIX THROWS WILL BE CAST AUTOMATICALLY</div>
+            <div style={{marginTop:16}}><button onClick={mode==="thc"?runTHCThrows:runAllThrows} style={{padding:"12px 32px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:11,letterSpacing:5,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18`}}>CAST COINS</button></div>
+            <div style={{fontSize:9,color:"#0c8",marginTop:12,letterSpacing:2}}>{mode==="iching"?"SIX THROWS WILL BE CAST AUTOMATICALLY":"FOUR THROWS WILL BE CAST AUTOMATICALLY"}</div>
           </div>
         )}
 
-        {phase==="throwing"&&(
+        {/* ═══ THROWING — I CHING ═══ */}
+        {phase==="throwing"&&mode==="iching"&&(
           <div style={{textAlign:"center",padding:"10px 0",animation:"fadeIn 0.3s ease-out"}}>
             {question&&(<div style={{fontSize:10,color:"#0e9",letterSpacing:2,padding:"8px 14px",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,255,51,0.02)",maxWidth:440,margin:"0 auto 16px"}}>"{question.length>80?question.slice(0,80)+"...":question}"</div>)}
             <div style={{fontSize:9,color:"#0a5",letterSpacing:4,marginBottom:8}}>CASTING LINE {currentThrow+1} OF 6</div>
@@ -247,13 +307,41 @@ export default function IChing(){
             <div style={{margin:"12px auto",padding:"14px 0",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,0,0,0.4)",width:"fit-content"}}>
               <div style={{fontSize:8,color:"#0a5",letterSpacing:4,marginBottom:10,textAlign:"center"}}>HEXAGRAM FORMING</div>
               <div style={{display:"flex",flexDirection:"column-reverse",gap:3,alignItems:"center",padding:"0 24px"}}>
-                {[0,1,2,3,4,5].map(i=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={lines[i]?.yang} changing={lines[i]?.changing} revealed={i<lines.length} animDelay={0}/><span style={{fontSize:7,width:28,flexShrink:0,textAlign:"left",color:lines[i]?.changing?PURPLE:"#052"}}>{lines[i]?`[${lines[i].sum}]`:""}{lines[i]?.changing?" ✕":""}</span></div>))}
+                {[0,1,2,3,4,5].map(i=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={lines[i]?.yang} changing={lines[i]?.changing} revealed={i<lines.length} animDelay={0}/><span style={{fontSize:7,width:28,flexShrink:0,textAlign:"left",color:lines[i]?.changing?PURPLE:"#0c8"}}>{lines[i]?`[${lines[i].sum}]`:""}{lines[i]?.changing?" ✕":""}</span></div>))}
               </div>
             </div>
           </div>
         )}
 
-        {phase==="reading"&&hexagram&&(
+        {/* ═══ THROWING — T'AI HSÜAN CHING ═══ */}
+        {phase==="throwing"&&mode==="thc"&&(
+          <div style={{textAlign:"center",padding:"10px 0",animation:"fadeIn 0.3s ease-out"}}>
+            {question&&(<div style={{fontSize:10,color:"#0e9",letterSpacing:2,padding:"8px 14px",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,255,51,0.02)",maxWidth:440,margin:"0 auto 16px"}}>"{question.length>80?question.slice(0,80)+"...":question}"</div>)}
+            <div style={{fontSize:9,color:"#0a5",letterSpacing:4,marginBottom:8}}>CASTING LINE {currentThrow+1} OF 4 {currentThrow===0?"(TOP)":currentThrow===3?"(BOTTOM)":""}</div>
+            <div style={{display:"flex",justifyContent:"center",gap:"clamp(4px,2vw,10px)",margin:"12px 0"}}>
+              {[0,1,2,3].map(i=>(<div key={i} style={{border:`1px solid ${GREEN}25`,borderRadius:2,padding:"8px 12px",background:"rgba(0,255,51,0.02)",minWidth:"clamp(50px,16vw,80px)",textAlign:"center"}}>
+                <div style={{fontFamily:"monospace",fontSize:"clamp(18px,5vw,28px)",color:GREEN,textShadow:`0 0 6px ${GREEN}`,minHeight:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {spinning&&activeThrow===currentThrow&&i<2?"⟳":spinning&&activeThrow===currentThrow?"⟳":coinResults[activeThrow]?((i%2===0)?(coinResults[activeThrow].sum-2>i/2?"H":"T"):""):"⌁"}
+                </div>
+              </div>))}
+            </div>
+            {coinResults.length>0&&(
+              <div style={{animation:"fadeIn 0.4s ease-out",padding:"8px 14px",border:`1px solid ${GREEN}30`,background:"rgba(0,255,51,0.03)",borderRadius:2,maxWidth:340,margin:"4px auto 12px"}}>
+                <div style={{fontSize:11,color:GREEN,letterSpacing:2}}>{coinResults[coinResults.length-1].label}</div>
+                <div style={{fontSize:9,color:"#0c8",letterSpacing:2,marginTop:2}}>{coinResults[coinResults.length-1].sum} heads → {coinResults[coinResults.length-1].value===0?"Heaven (solid)":coinResults[coinResults.length-1].value===1?"Earth (once-broken)":"Man (twice-broken)"}</div>
+              </div>
+            )}
+            <div style={{margin:"12px auto",padding:"14px 0",border:`1px solid ${GREEN}15`,borderRadius:2,background:"rgba(0,0,0,0.4)",width:"fit-content"}}>
+              <div style={{fontSize:8,color:"#0a5",letterSpacing:4,marginBottom:10,textAlign:"center"}}>TETRAGRAM FORMING</div>
+              <div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center",padding:"0 24px"}}>
+                {[0,1,2,3].map(i=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><TetragramLine value={lines[i]?.value} revealed={i<lines.length} animDelay={0}/><span style={{fontSize:7,width:48,flexShrink:0,textAlign:"left",color:"#0c8"}}>{lines[i]?lines[i].value===0?"Heaven":lines[i].value===1?"Earth":"Man":""}</span></div>))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ READING — I CHING ═══ */}
+        {phase==="reading"&&mode==="iching"&&hexagram&&(
           <div style={{padding:"10px 0 40px",animation:"fadeIn 0.8s ease-out"}}>
             {question&&(<div style={{textAlign:"center",fontSize:"clamp(12px,3.2vw,14px)",color:"#0a8",letterSpacing:1,marginBottom:20,padding:"10px 16px",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,255,51,0.02)",lineHeight:1.6}}>Your question: "{question}"</div>)}
             <div style={{border:`1px solid ${GREEN}60`,borderRadius:2,padding:"24px 20px",background:"rgba(0,255,51,0.02)",boxShadow:`0 0 30px ${GREEN}08, inset 0 0 30px ${GREEN}05`,marginBottom:24}}>
@@ -265,7 +353,7 @@ export default function IChing(){
               </div>
               <div style={{margin:"16px auto",padding:"14px 0",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,0,0,0.3)",width:"fit-content"}}>
                 <div style={{display:"flex",flexDirection:"column-reverse",gap:4,alignItems:"center",padding:"0 24px"}}>
-                  {lines.map((l,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={l.yang} changing={l.changing} revealed={true} animDelay={i*120}/><span style={{fontSize:8,width:36,flexShrink:0,textAlign:"left",color:l.changing?PURPLE:"#052"}}>[{l.sum}]{l.changing?" ✕":""}</span></div>))}
+                  {lines.map((l,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><HexagramLine yang={l.yang} changing={l.changing} revealed={true} animDelay={i*120}/><span style={{fontSize:8,width:36,flexShrink:0,textAlign:"left",color:l.changing?PURPLE:"#0c8"}}>[{l.sum}]{l.changing?" ✕":""}</span></div>))}
                 </div>
               </div>
               {showReading&&(
@@ -277,17 +365,17 @@ export default function IChing(){
                   <div style={{margin:"16px 0",padding:"18px",borderLeft:`3px solid ${GREEN}80`,background:"rgba(0,255,51,0.015)",borderRadius:"0 2px 2px 0"}}>
                     <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>THE JUDGMENT</div>
                     <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#c8e8cb",fontStyle:"italic"}}>{hexagram.judge}</div>
-                    <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#8fc493",marginTop:8}}>The Judgment is the oracle's core advice — the essential message about your situation. Read it slowly and consider how it applies to your question.</div>
+                    <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#8fc493",marginTop:8}}>The Judgment is the oracle's core advice — the essential message about your situation.</div>
                   </div>
                   <div style={{margin:"16px 0",padding:"18px",borderLeft:"3px solid #0a5",background:"rgba(0,255,51,0.01)",borderRadius:"0 2px 2px 0"}}>
                     <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>THE IMAGE</div>
                     <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#b0d4b3",fontStyle:"italic"}}>{hexagram.image}</div>
-                    <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#8fc493",marginTop:8}}>The Image is a metaphor drawn from nature that shows you how to embody this hexagram's wisdom in daily life.</div>
+                    <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#8fc493",marginTop:8}}>The Image is a metaphor from nature showing how to embody this hexagram's wisdom.</div>
                   </div>
                   {lines.some(l=>l.changing)&&(
                     <div style={{margin:"16px 0",padding:"18px",borderLeft:`3px solid ${PURPLE}`,background:"rgba(180,74,255,0.03)",borderRadius:"0 2px 2px 0"}}>
                       <div style={{fontSize:10,color:PURPLE_DIM,letterSpacing:4,marginBottom:10}}>CHANGING LINES</div>
-                      <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#c4a0d9",marginBottom:12}}>Changing lines show where transformation is actively happening — the specific points of movement in your situation. These lines are shifting from one state to another, creating the Relating Hexagram below.</div>
+                      <div style={{fontSize:"clamp(13px,3.5vw,15px)",lineHeight:1.9,color:"#c4a0d9",marginBottom:12}}>Changing lines show where transformation is actively happening. These lines shift from one state to another, creating the Relating Hexagram below.</div>
                       {lines.map((l,i)=>l.changing?(<div key={i} style={{fontSize:"clamp(14px,3.8vw,16px)",color:PURPLE,marginBottom:8,lineHeight:1.7,textShadow:`0 0 4px ${PURPLE}44`,padding:"6px 0",borderBottom:`1px solid ${PURPLE}15`}}>⚡ <strong>{lineLabels[i]} line</strong> ({l.yang?"Yang → Yin":"Yin → Yang"}) — Position {i+1} {i<3?"(inner/lower trigram)":"(outer/upper trigram)"} is in active transition.</div>):null)}
                     </div>
                   )}
@@ -322,8 +410,63 @@ export default function IChing(){
           </div>
         )}
 
+        {/* ═══ READING — T'AI HSÜAN CHING ═══ */}
+        {phase==="reading"&&mode==="thc"&&thcResult&&(
+          <div style={{padding:"10px 0 40px",animation:"fadeIn 0.8s ease-out"}}>
+            {question&&(<div style={{textAlign:"center",fontSize:"clamp(12px,3.2vw,14px)",color:"#0a8",letterSpacing:1,marginBottom:20,padding:"10px 16px",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,255,51,0.02)",lineHeight:1.6}}>Your question: "{question}"</div>)}
+            <div style={{border:`1px solid ${GREEN}60`,borderRadius:2,padding:"24px 20px",background:"rgba(0,255,51,0.02)",boxShadow:`0 0 30px ${GREEN}08, inset 0 0 30px ${GREEN}05`,marginBottom:24}}>
+              <div style={{textAlign:"center",marginBottom:20}}>
+                <div style={{fontSize:9,color:"#0a5",letterSpacing:6,marginBottom:4}}>TETRAGRAM ⌁ {thcResult.realm.toUpperCase()} REALM</div>
+                <div style={{fontSize:"clamp(20px,5vw,30px)",letterSpacing:"0.15em",fontWeight:400,textShadow:`0 0 12px ${GREEN}`,margin:"12px 0"}}>{thcResult.n}. {thcResult.name}</div>
+                <div style={{fontSize:"clamp(15px,4vw,20px)",color:"#0a8",letterSpacing:4,marginTop:4}}>{thcResult.eng.toUpperCase()}</div>
+                <div style={{fontSize:11,color:"#0c8",marginTop:8,letterSpacing:2}}>
+                  {thcResult.realm==="Heaven"?"T'IEN 天 — Tetragrams 1–27":thcResult.realm==="Man"?"JEN 人 — Tetragrams 28–54":"TI 地 — Tetragrams 55–81"}
+                </div>
+              </div>
+              {/* Tetragram lines display (top-down) */}
+              <div style={{margin:"16px auto",padding:"14px 0",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,0,0,0.3)",width:"fit-content"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:4,alignItems:"center",padding:"0 24px"}}>
+                  {lines.map((l,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:8,color:"#0c8",width:12,textAlign:"right",flexShrink:0}}>{i+1}</span><TetragramLine value={l.value} revealed={true} animDelay={i*120}/><span style={{fontSize:8,width:48,flexShrink:0,textAlign:"left",color:"#0c8"}}>{l.value===0?"Heaven":l.value===1?"Earth":"Man"}</span></div>))}
+                </div>
+              </div>
+              {/* Three forces breakdown */}
+              <div style={{margin:"16px auto",display:"flex",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
+                {[["Heaven ⚊","Tian 天","Creative, initiating, the power of sky"],["Earth ⚋","Di 地","Receptive, sustaining, the power of ground"],["Man 𝌀","Ren 人","Mediating, transforming, the power of humanity"]].map(([name,ch,desc],i)=>(
+                  <div key={i} style={{padding:"10px 14px",border:`1px solid ${GREEN}20`,borderRadius:2,background:"rgba(0,255,51,0.01)",minWidth:140,textAlign:"center"}}>
+                    <div style={{fontSize:13,color:GREEN,marginBottom:2}}>{name}</div>
+                    <div style={{fontSize:10,color:"#0c8",letterSpacing:2}}>{ch}</div>
+                    <div style={{fontSize:9,color:"#0a8",marginTop:4,lineHeight:1.5}}>{desc}</div>
+                  </div>
+                ))}
+              </div>
+              {showReading&&(
+                <div style={{animation:"fadeIn 1s ease-out"}}>
+                  <div style={{margin:"20px 0",padding:"18px",borderLeft:`3px solid ${GREEN}`,background:"rgba(0,255,51,0.025)",borderRadius:"0 2px 2px 0"}}>
+                    <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>WHAT THIS MEANS FOR YOU</div>
+                    <div style={{fontSize:"clamp(16px,4.2vw,19px)",lineHeight:2,color:"#ddf2df"}}>{thcResult.explain}</div>
+                  </div>
+                  <div style={{margin:"16px 0",padding:"18px",borderLeft:"3px solid #0a5",background:"rgba(0,255,51,0.01)",borderRadius:"0 2px 2px 0"}}>
+                    <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>ABOUT THE {thcResult.realm.toUpperCase()} REALM</div>
+                    <div style={{fontSize:"clamp(14px,3.8vw,17px)",lineHeight:2,color:"#b0d4b3"}}>{thcResult.realm==="Heaven"?"The Heaven realm (Tetragrams 1–27) represents the creative, initiating forces of the cosmos. These tetragrams speak to beginnings, ascent, spiritual power, and the celestial principles that set things in motion. When your reading falls in this realm, the energies at work are expansive and originating — you are close to the source.":thcResult.realm==="Man"?"The Man realm (Tetragrams 28–54) represents the human sphere — where cosmic forces are translated into lived experience. These tetragrams speak to transformation, relationship, society, purpose, and the complex dance of human endeavor. When your reading falls here, the situation is fundamentally about the human dimension — choice, effort, connection.":"The Earth realm (Tetragrams 55–81) represents the receptive, completing, and sometimes difficult forces of existence. These tetragrams speak to decline, limitation, endurance, and the deep wisdom that comes through hardship and surrender. When your reading falls here, the situation calls for patience, acceptance, and the strength found in yielding."}</div>
+                  </div>
+                  <div style={{margin:"16px 0",padding:"18px",borderLeft:"3px solid #085",background:"rgba(0,255,51,0.008)",borderRadius:"0 2px 2px 0"}}>
+                    <div style={{fontSize:10,color:"#0a5",letterSpacing:4,marginBottom:10}}>SOURCE</div>
+                    <div style={{fontSize:"clamp(12px,3.2vw,14px)",lineHeight:1.9,color:"#8fc493"}}>The T'ai Hsüan Ching was composed by Yang Xiong in 2 BCE. The authoritative English translation is <em>The Elemental Changes</em> by Michael Nylan (SUNY Press, 1993). Tetragram names follow the Nylan translation and Unicode standard (U+1D306–1D356).</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            {showReading&&(
+              <div style={{textAlign:"center",marginTop:28,animation:"fadeIn 1.5s ease-out"}}>
+                <button onClick={startConsultation} style={{padding:"14px 36px",background:"transparent",border:`1px solid ${GREEN}`,color:GREEN,fontFamily:"monospace",fontSize:12,letterSpacing:5,cursor:"pointer",borderRadius:2,boxShadow:`0 0 15px ${GREEN}18`}}>NEW CONSULTATION</button>
+                <button onClick={()=>setPhase("intro")} style={{padding:"14px 24px",background:"transparent",border:"1px solid #44444440",color:"#0c8",fontFamily:"monospace",fontSize:11,letterSpacing:3,cursor:"pointer",borderRadius:2,marginLeft:12}}>RETURN</button>
+              </div>
+            )}
+          </div>
+        )}
+
         <footer style={{textAlign:"center",padding:"40px 0 20px",borderTop:"1px solid #0f320",marginTop:40}}>
-          <div style={{fontSize:8,color:"#0c8",letterSpacing:4,lineHeight:2.2}}>SYSTEM DERIVED FROM THE BOOK OF CHANGES<br/>THREE-COIN METHOD ⌁ KING WEN SEQUENCE<br/>ORACLE ENGINE v1.0</div>
+          <div style={{fontSize:8,color:"#0c8",letterSpacing:4,lineHeight:2.2}}>{mode==="iching"?"SYSTEM DERIVED FROM THE BOOK OF CHANGES":"SYSTEM DERIVED FROM THE CANON OF SUPREME MYSTERY"}<br/>{mode==="iching"?"THREE-COIN METHOD ⌁ KING WEN SEQUENCE":"FOUR-COIN METHOD ⌁ YANG XIONG SEQUENCE"}<br/>ORACLE ENGINE v1.0</div>
         </footer>
       </div>
 
